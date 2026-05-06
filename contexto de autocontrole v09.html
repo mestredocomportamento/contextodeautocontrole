@@ -1,0 +1,449 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Plataforma Senciente | TTCH Engine</title>
+  <style>
+    :root {
+      --bg-abyss: #03050a;
+      --neon-cyan: #00f0ff;
+      --neon-purple: #8a2be2;
+      --glass-panel: rgba(10, 15, 30, 0.55);
+      --glass-border: rgba(0, 240, 255, 0.3);
+      --text-main: #e2e8f0;
+      --text-muted: #8b9bb4;
+      --success-matrix: #00ff66;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+
+    body {
+      background-color: var(--bg-abyss);
+      background-image: 
+        linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px),
+        radial-gradient(circle at 20% 40%, rgba(138, 43, 226, 0.15), transparent 40%),
+        radial-gradient(circle at 80% 60%, rgba(0, 240, 255, 0.15), transparent 40%);
+      background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%;
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      overflow-x: hidden;
+      perspective: 2000px; 
+    }
+
+    .header { text-align: center; margin-bottom: 2rem; z-index: 10; transform: translateZ(80px); }
+    .header h1 {
+      font-size: 2.5rem; font-weight: 800; letter-spacing: 3px; text-transform: uppercase;
+      background: linear-gradient(135deg, #fff, var(--neon-cyan), var(--neon-purple));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      text-shadow: 0 10px 30px rgba(0, 240, 255, 0.4);
+    }
+    .header p { color: var(--text-muted); font-size: 0.9rem; letter-spacing: 5px; text-transform: uppercase; margin-top: 0.5rem; }
+
+    .container { width: 100%; max-width: 1200px; display: flex; flex-direction: column; gap: 1.5rem; position: relative; z-index: 2; }
+
+    .panel-3d {
+      background: var(--glass-panel); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+      border: 1px solid var(--glass-border); border-radius: 20px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 20px rgba(0, 240, 255, 0.1), inset 0 1px 0 rgba(255,255,255,0.2);
+      transform-style: preserve-3d; transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+    }
+    .panel-3d:hover {
+      box-shadow: 0 40px 80px rgba(0,0,0,0.9), inset 0 0 30px rgba(0, 240, 255, 0.2), inset 0 1px 0 rgba(255,255,255,0.3), 0 0 20px rgba(138, 43, 226, 0.3);
+    }
+
+    #login-screen { padding: 3rem; text-align: center; max-width: 550px; margin: 2rem auto; }
+    .login-logo-container { margin-bottom: 2rem; transform: translateZ(60px); display: flex; justify-content: center; }
+    .login-logo { width: 100%; max-width: 320px; border-radius: 16px; box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 30px rgba(0, 240, 255, 0.2); border: 1px solid rgba(255,255,255,0.05); transition: transform 0.3s ease; }
+    .login-logo:hover { transform: scale(1.05); }
+
+    .user-btn {
+      width: 100%; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px; padding: 1.2rem; margin-bottom: 1rem; cursor: pointer;
+      display: flex; align-items: center; gap: 1.2rem; text-align: left;
+      transition: all 0.3s ease; transform-style: preserve-3d; transform: translateZ(30px);
+    }
+    .user-btn:hover { border-color: var(--neon-cyan); background: rgba(0, 240, 255, 0.08); box-shadow: 0 0 25px rgba(0, 240, 255, 0.3); transform: translateZ(40px) translateY(-5px); }
+    .user-btn .avatar { width: 50px; height: 50px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.2rem; color: #fff; box-shadow: inset 0 0 15px rgba(0,0,0,0.8); }
+    .user-btn.master .avatar { background: linear-gradient(135deg, #0a0a1a, var(--neon-purple)); border: 1px solid var(--neon-purple); }
+    .user-btn.student .avatar { background: linear-gradient(135deg, #0a0a1a, var(--neon-cyan)); border: 1px solid var(--neon-cyan); }
+    .user-info strong { color: var(--text-main); display: block; font-size: 1.1rem; }
+    .user-info small { color: var(--text-muted); }
+
+    #main-app { display: none; flex-direction: column; gap: 1.5rem; }
+
+    .dashboard-top { display: flex; justify-content: space-between; align-items: center; transform: translateZ(40px); flex-wrap: wrap; gap: 1rem; background: rgba(0,0,0,0.4); padding: 1rem 2rem; border-radius: 16px; border: 1px solid var(--glass-border); backdrop-filter: blur(10px); }
+    .user-badge { display: flex; align-items: center; gap: 0.8rem; }
+    .user-badge .pulse { width: 12px; height: 12px; border-radius: 50%; background: var(--success-matrix); box-shadow: 0 0 15px var(--success-matrix); animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.5); } 100% { opacity: 1; transform: scale(1); } }
+    
+    .nav-tabs { display: flex; gap: 1rem; }
+    .nav-btn { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); color: var(--text-muted); padding: 0.8rem 1.8rem; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease; }
+    .nav-btn:hover { border-color: var(--neon-purple); color: #fff; transform: translateY(-2px); }
+    .nav-btn.active { background: rgba(0, 240, 255, 0.1); border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.2), 0 5px 15px rgba(0,0,0,0.5); }
+
+    .btn-action { background: transparent; border: 1px solid var(--neon-cyan); color: var(--neon-cyan); padding: 0.6rem 1.5rem; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-size: 0.8rem; font-weight: 600; transition: all 0.3s ease; }
+    .btn-action:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 20px var(--neon-cyan); transform: scale(1.05); }
+
+    .tab-content { display: none; animation: slideUp 0.5s ease-out forwards; opacity: 0; }
+    .tab-content.active { display: block; }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px) translateZ(0); } to { opacity: 1; transform: translateY(0) translateZ(20px); } }
+
+    .dashboard-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; }
+    @media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } }
+    .module { padding: 2rem; position: relative; overflow: hidden; }
+    .module-title { font-size: 0.9rem; color: var(--neon-cyan); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; transform: translateZ(40px); font-weight: 700; border-bottom: 1px solid rgba(0, 240, 255, 0.2); padding-bottom: 0.5rem; }
+    
+    .temporal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; transform: translateZ(30px); }
+    .temp-item { background: rgba(0,0,0,0.4); padding: 1.2rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); text-align: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+    .temp-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; }
+    .temp-value { font-size: 1.6rem; font-weight: 800; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.3); }
+    
+    .metric-group { margin-bottom: 1.5rem; transform: translateZ(35px); }
+    .metric-header { display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.5rem; color: var(--text-main); font-weight: 600; }
+    .bar-bg { height: 8px; background: rgba(0,0,0,0.6); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+    .bar-fill { height: 100%; border-radius: 10px; width: 0%; transition: width 1.5s cubic-bezier(0.1, 0.5, 0.1, 1); position: relative; }
+    .bar-fill.coherence { background: linear-gradient(90deg, transparent, var(--neon-cyan)); box-shadow: 0 0 15px var(--neon-cyan); }
+    .bar-fill.monitoring { background: linear-gradient(90deg, transparent, var(--neon-purple)); box-shadow: 0 0 15px var(--neon-purple); }
+
+    .finance-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; transform: translateZ(50px); }
+    .finance-item { background: rgba(0,0,0,0.4); border-radius: 16px; padding: 1.8rem; border-top: 3px solid var(--glass-border); position: relative; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.5); }
+    .finance-item.imm { border-top-color: var(--neon-cyan); }
+    .finance-item.med { border-top-color: var(--neon-purple); }
+    .finance-item.lng { border-top-color: var(--success-matrix); }
+    .fin-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
+    .fin-value { font-size: 2rem; font-weight: 800; color: #fff; margin-bottom: 0.5rem; text-shadow: 0 0 15px rgba(255,255,255,0.4); }
+
+    .relato-container { transform: translateZ(45px); display: flex; flex-direction: column; gap: 1rem; }
+    .hw-input.textarea { resize: vertical; min-height: 100px; padding: 1rem; font-size: 1rem; background: rgba(0,0,0,0.6); border: 1px solid rgba(138, 43, 226, 0.3); border-radius: 12px; }
+    .relato-actions { display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem; }
+    
+    .media-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: rgba(0,0,0,0.5); border: 1px dashed var(--neon-cyan); color: var(--neon-cyan); padding: 1rem; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 1px; font-size: 0.85rem; font-weight: 600; transition: all 0.3s ease; }
+    .media-btn:hover { background: rgba(0, 240, 255, 0.1); box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.2); transform: translateY(-3px); }
+    .media-btn.purple { border-color: var(--neon-purple); color: var(--neon-purple); }
+    .media-btn.purple:hover { background: rgba(138, 43, 226, 0.1); box-shadow: inset 0 0 15px rgba(138, 43, 226, 0.3); }
+
+    .inventory-list { display: flex; flex-direction: column; gap: 1rem; transform: translateZ(35px); }
+    .inventory-item { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.4); padding: 1.2rem 1.5rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: all 0.3s ease; }
+    .inventory-item:hover { border-color: var(--neon-cyan); background: rgba(0, 240, 255, 0.08); transform: translateZ(15px) translateX(5px); box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+    .inventory-check { appearance: none; width: 24px; height: 24px; border: 2px solid var(--neon-cyan); border-radius: 6px; outline: none; cursor: pointer; position: relative; margin-right: 1.5rem; background: rgba(0,0,0,0.5); box-shadow: inset 0 0 5px rgba(0,0,0,0.5); }
+    .inventory-check:checked { background: var(--neon-cyan); box-shadow: 0 0 15px var(--neon-cyan); }
+    .inventory-check:checked::after { content: '✓'; position: absolute; top: -2px; left: 4px; color: #000; font-weight: 800; font-size: 18px; }
+    .inventory-text { flex-grow: 1; color: var(--text-main); font-size: 1.05rem; font-weight: 500; }
+    .inventory-reward { color: var(--success-matrix); font-weight: 800; font-size: 1rem; background: rgba(0, 255, 102, 0.1); padding: 0.5rem 1rem; border-radius: 8px; border: 1px solid rgba(0, 255, 102, 0.2); }
+
+    .btn-submit { background: linear-gradient(90deg, rgba(0,255,102,0.1), transparent); border: 1px solid var(--success-matrix); color: var(--success-matrix); padding: 1.2rem 2rem; border-radius: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; font-weight: 800; width: 100%; transition: all 0.3s ease; transform: translateZ(50px); box-shadow: 0 10px 20px rgba(0,0,0,0.5); margin-top: 1.5rem;}
+    .btn-submit:hover { background: var(--success-matrix); color: #000; box-shadow: 0 0 30px var(--success-matrix); transform: translateZ(60px) scale(1.02); }
+
+    /* Estilos Específicos do Inventário de Hardware (Aba 2) */
+    .instruction-text { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem; line-height: 1.6; transform: translateZ(30px); background: rgba(0,0,0,0.4); padding: 1.2rem; border-left: 4px solid var(--neon-purple); border-radius: 6px; }
+    .hw-category { font-size: 1.3rem; color: var(--neon-purple); margin: 2.5rem 0 1rem 0; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(138, 43, 226, 0.3); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; transform: translateZ(25px); }
+    .hw-subcategory { font-size: 1.1rem; color: var(--neon-cyan); margin: 1.5rem 0 1rem 0; padding-left: 0.8rem; border-left: 3px solid var(--neon-cyan); font-weight: 600; transform: translateZ(20px); }
+    .hw-grid { display: flex; flex-direction: column; gap: 0.8rem; transform: translateZ(15px); }
+    .hw-item { display: grid; grid-template-columns: auto 1fr 2fr; gap: 1rem; align-items: center; background: rgba(0,0,0,0.3); padding: 1rem 1.2rem; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease; }
+    .hw-item:hover { border-color: var(--neon-cyan); background: rgba(0, 240, 255, 0.08); box-shadow: inset 0 0 15px rgba(0, 240, 255, 0.1); transform: translateX(8px); }
+    .hw-check { appearance: none; width: 22px; height: 22px; border: 2px solid var(--neon-cyan); border-radius: 4px; outline: none; cursor: pointer; position: relative; background: rgba(0,0,0,0.5); flex-shrink: 0; }
+    .hw-check:checked { background: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); }
+    .hw-check:checked::after { content: '✓'; position: absolute; top: -1px; left: 4px; color: #000; font-weight: bold; font-size: 16px; }
+    .hw-label { color: var(--text-main); font-size: 1rem; font-weight: 500; }
+    .hw-input { background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 0.8rem 1.2rem; color: #fff; font-family: inherit; width: 100%; transition: all 0.3s ease; }
+    .hw-input:focus { outline: none; border-color: var(--neon-purple); box-shadow: 0 0 15px rgba(138, 43, 226, 0.4); }
+    @media (max-width: 768px) { .hw-item { grid-template-columns: auto 1fr; } .hw-input { grid-column: 1 / -1; margin-top: 0.5rem; } }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Controle & Coerência</h1>
+    <p>Senciente TTCH Engine</p>
+  </div>
+
+  <div class="container">
+    
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen" class="panel-3d interactive-card">
+      <div class="login-logo-container">
+        <img src="image.png" alt="Logomarca Contexto de Autocontrole" class="login-logo">
+      </div>
+      <div class="login-title">Acesso Biométrica / Comportamental</div>
+      <button class="user-btn master" onclick="login('master')">
+        <div class="avatar">M</div>
+        <div class="user-info"><strong>Mestre Abraão</strong><small>Arquiteto TTCH</small></div>
+      </button>
+      <button class="user-btn student" onclick="login('student')">
+        <div class="avatar">A</div>
+        <div class="user-info"><strong>Aprendiz A03.2026</strong><small>Protocolo de Autocontrole</small></div>
+      </button>
+    </div>
+
+    <!-- APLICAÇÃO PRINCIPAL -->
+    <div id="main-app">
+      
+      <div class="dashboard-top interactive-card">
+        <div class="user-badge"><div class="pulse"></div><span id="user-display" style="font-weight: 700; letter-spacing: 1px;">Identidade</span></div>
+        <div class="nav-tabs">
+          <button class="nav-btn active" onclick="switchTab('tab-dashboard', this)">Painel Operante</button>
+          <button class="nav-btn" onclick="switchTab('tab-hardware', this)">Tarefa 01: Hardware ($S^D$)</button>
+        </div>
+        <button class="btn-action" onclick="logout()">Encerrar Sessão</button>
+      </div>
+
+      <!-- ABA 1: DASHBOARD -->
+      <div id="tab-dashboard" class="tab-content active">
+        <div class="dashboard-grid">
+          
+          <div class="panel-3d module interactive-card">
+            <div class="module-title">■ Variáveis Temporais</div>
+            <div class="temporal-grid">
+              <div class="temp-item"><div class="temp-label">Semana</div><div class="temp-value" id="week-number">--</div></div>
+              <div class="temp-item"><div class="temp-label">Dia</div><div class="temp-value" id="weekday">--</div></div>
+              <div class="temp-item"><div class="temp-label">Data</div><div class="temp-value" id="day-month">--</div></div>
+              <div class="temp-item"><div class="temp-label">Mês</div><div class="temp-value" id="month">--</div></div>
+            </div>
+
+            <div class="module-title" style="margin-top: 2.5rem;">■ Topografia Operante</div>
+            <div class="metric-group">
+              <div class="metric-header"><span>Taxa de Coerência</span><span id="txt-coherence">0%</span></div>
+              <div class="bar-bg"><div class="bar-fill coherence" id="bar-coherence"></div></div>
+            </div>
+            <div class="metric-group">
+              <div class="metric-header"><span>Frequência Automonitoração</span><span id="txt-monitoring">0%</span></div>
+              <div class="bar-bg"><div class="bar-fill monitoring" id="bar-monitoring"></div></div>
+            </div>
+          </div>
+
+          <div class="panel-3d module interactive-card">
+            <div class="module-title">■ Projeção de Reforçadores</div>
+            <div class="finance-grid">
+              <div class="finance-item imm">
+                <div class="fin-label">Imediato (D0)</div>
+                <div class="fin-value" id="gain-immediate">R$ 0</div>
+                <div class="fin-desc">Contingência diária.</div>
+              </div>
+              <div class="finance-item med">
+                <div class="fin-label">Médio Prazo (M3)</div>
+                <div class="fin-value" id="gain-medium">R$ 0</div>
+                <div class="fin-desc">Acúmulo tático.</div>
+              </div>
+              <div class="finance-item lng">
+                <div class="fin-label">Longo Prazo (A1)</div>
+                <div class="fin-value" id="gain-year">R$ 0</div>
+                <div class="fin-desc">Domínio comportamental.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- RELATO DIÁRIO MULTIMODAL -->
+          <div class="panel-3d module interactive-card" style="grid-column: 1 / -1;">
+            <div class="module-title">■ Relato Diário de Tudo (Automonitoração de Amplo Espectro)</div>
+            <div class="relato-container">
+              <textarea class="hw-input textarea" placeholder="Descreve as contingências, estímulos e topografias do teu dia..."></textarea>
+              <div class="relato-actions">
+                <label class="media-btn">
+                  📷 Anexar Topografia Visual
+                  <input type="file" accept="image/*" style="display:none;">
+                </label>
+                <button class="media-btn purple" onclick="alert('Módulo de captação de áudio acionado.')">
+                  🎙️ Gravar Relato Vocal
+                </button>
+              </div>
+              <button class="btn-submit" onclick="alert('Relato processado e gravado na matriz de dados TTCH.')">Transmitir Relato para a Base Senciente</button>
+            </div>
+          </div>
+
+          <!-- Tarefas -->
+          <div class="panel-3d module interactive-card" style="grid-column: 1 / -1;">
+            <div class="module-title">■ Cadeia Operante (Registo de Tarefas)</div>
+            <div class="inventory-list">
+              <label class="inventory-item" onclick="document.querySelector('.nav-btn:nth-child(2)').click();">
+                <input type="checkbox" class="inventory-check" />
+                <span class="inventory-text">Tarefa 01: Preencher Inventário de Interface Operante (Hardware) <em>[Clique para abrir a Aba]</em></span>
+                <span class="inventory-reward">+ R$ 25,00</span>
+              </label>
+              <label class="inventory-item">
+                <input type="checkbox" class="inventory-check" />
+                <span class="inventory-text">Tarefa 02: Preenchimento da Automonitoração Diária</span>
+                <span class="inventory-reward">+ R$ 15,00</span>
+              </label>
+              <label class="inventory-item">
+                <input type="checkbox" class="inventory-check" />
+                <span class="inventory-text">Tarefa 03: Relato Diário Multimodal (Acima)</span>
+                <span class="inventory-reward">+ R$ 20,00</span>
+              </label>
+              <label class="inventory-item">
+                <input type="checkbox" class="inventory-check" />
+                <span class="inventory-text">Tarefa 04: Leitura Analítica - "Admirável Mundo Novo"</span>
+                <span class="inventory-reward">+ R$ 30,00</span>
+              </label>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ABA 2: INVENTÁRIO DE HARDWARE (Totalmente Injetado) -->
+      <div id="tab-hardware" class="tab-content">
+        <div class="panel-3d interactive-card" style="padding: 2.5rem;">
+          <div class="module-title">■ Especificação Topográfica de Hardware ($S^D$)</div>
+          
+          <div class="instruction-text">
+            <strong>Diretriz Operante:</strong> Identifica o(s) teu(s) dispositivo(s) primário(s) marcando a caixa. No campo de texto, descreve com exatidão a condição do aparelho (Ex: <em>Funcionando, Nunca utilizado, Quebrado, Pertence a outrem</em>). A latência do teu hardware é uma variável interveniente na tua taxa de resposta.
+          </div>
+
+          <form id="hardware-form" onsubmit="event.preventDefault(); alert('Inventário Registado na Base Senciente.'); document.querySelector('.nav-btn:nth-child(1)').click();">
+            
+            <!-- 1. SMARTPHONES -->
+            <div class="hw-category">1. Smartphones (Dispositivos Primários)</div>
+            
+            <!-- 1.1 Apple -->
+            <div class="hw-subcategory">1.1 Apple (Ecossistema iOS)</div>
+            <div class="hw-grid">
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">iPhone XR / XS / XS Max</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">iPhone 11 / 11 Pro / 11 Pro Max</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">iPhone SE (2ª ou 3ª Geração)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">iPhone 12 / 12 mini / 12 Pro (Max)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">iPhone 13 / 13 mini / 13 Pro (Max)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">iPhone 14 / 14 Plus / 14 Pro (Max)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">iPhone 15 / 15 Plus / 15 Pro (Max)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">iPhone 16 / 16 Plus / 16 Pro (Max)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">iPhone 17 / 17 Plus / 17 Pro (Max)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+            </div>
+
+            <!-- 1.2 Samsung -->
+            <div class="hw-subcategory">1.2 Samsung (Linha Galaxy)</div>
+            <div class="hw-grid">
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Linha S22 (Base, +, Ultra)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Linha S23 (Base, +, Ultra, FE)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Linha S24 (Base, +, Ultra, FE)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Linha S25 (Base, +, Ultra)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Linha S26 (Base, +, Ultra)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Linha Z Fold (4, 5, 6, 7)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Linha Z Flip (4, 5, 6, 7)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Linha A Premium (A53 a A56)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Linha A Intermediária (A33 a A36)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+            </div>
+
+            <!-- 1.3 Asiáticos -->
+            <div class="hw-subcategory">1.3 Asiáticos (Xiaomi, Poco, Realme)</div>
+            <div class="hw-grid">
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Xiaomi Linha 12 / 12T / Pro / Ultra</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Xiaomi Linha 13 / 13T / Pro / Ultra</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Xiaomi Linha 14 / 14T / Pro / Ultra</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Xiaomi Linha 15 / 16 e variantes</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Poco Linha F (F4, F5, F6, F7)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Poco Linha X (X4, X5, X6, X7)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Realme Linhas Numéricas (10 ao 14)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Realme Linha GT (2, 3, 5, 6)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+            </div>
+
+            <!-- 1.4 Outros -->
+            <div class="hw-subcategory">1.4 Outros Aparelhos / Marcas</div>
+            <div class="hw-grid">
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Motorola Linha Edge (30 ao 60)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Motorola Moto G (G32 ao G84+)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Asus Zenfone / ROG Phone (9 ao 11)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Google Pixel (6 ao 10)</span><input type="text" class="hw-input" placeholder="Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Outra marca/modelo não listado</span><input type="text" class="hw-input" placeholder="Especificar modelo e condição..."></label>
+            </div>
+
+            <!-- 2. OUTROS DISPOSITIVOS -->
+            <div class="hw-category">2. Outros Dispositivos de Acesso (Opcional)</div>
+            <div class="hw-grid">
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Tablet (iPad, Galaxy Tab, etc.)</span><input type="text" class="hw-input" placeholder="Modelo e Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Smartwatch (Apple, Galaxy, etc.)</span><input type="text" class="hw-input" placeholder="Modelo e Condição..."></label>
+              <label class="hw-item"><input type="checkbox" class="hw-check"/><span class="hw-label">Desktop / Notebook Principal</span><input type="text" class="hw-input" placeholder="Configuração e Condição..."></label>
+            </div>
+
+            <button type="submit" class="btn-submit">Validar Mapeamento Ambiental</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const usersData = {
+      master: { name: 'Mestre Abraão (M00)', gains: { immediate: 1250.00, medium: 8750.00, year: 42300.00 }, metrics: { coherence: 98, monitoring: 100 } },
+      student: { name: 'Aprendiz A03.2026', gains: { immediate: 320.00, medium: 2180.00, year: 11500.00 }, metrics: { coherence: 76, monitoring: 82 } }
+    };
+
+    function login(role) {
+      const u = usersData[role];
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('main-app').style.display = 'flex';
+      document.getElementById('user-display').textContent = u.name;
+      updateTemporalData();
+      
+      const formatCurrency = (val) => 'R$ ' + val.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+      document.getElementById('gain-immediate').textContent = formatCurrency(u.gains.immediate);
+      document.getElementById('gain-medium').textContent = formatCurrency(u.gains.medium);
+      document.getElementById('gain-year').textContent = formatCurrency(u.gains.year);
+
+      setTimeout(() => {
+        document.getElementById('bar-coherence').style.width = u.metrics.coherence + '%';
+        document.getElementById('txt-coherence').textContent = u.metrics.coherence + '%';
+        document.getElementById('bar-monitoring').style.width = u.metrics.monitoring + '%';
+        document.getElementById('txt-monitoring').textContent = u.metrics.monitoring + '%';
+      }, 100);
+    }
+
+    function logout() {
+      document.getElementById('main-app').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'block';
+      document.getElementById('bar-coherence').style.width = '0%';
+      document.getElementById('bar-monitoring').style.width = '0%';
+      switchTab('tab-dashboard', document.querySelector('.nav-btn'));
+    }
+
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      btnElement.classList.add('active');
+    }
+
+    function updateTemporalData() {
+      const now = new Date();
+      const weekdays = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'];
+      const months = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+      const start = new Date(now.getFullYear(), 0, 1);
+      const days = Math.floor((now - start) / 86400000);
+      document.getElementById('week-number').textContent = Math.ceil((days + start.getDay() + 1) / 7);
+      document.getElementById('weekday').textContent = weekdays[now.getDay()];
+      document.getElementById('day-month').textContent = String(now.getDate()).padStart(2, '0');
+      document.getElementById('month').textContent = months[now.getMonth()];
+    }
+
+    document.querySelectorAll('.interactive-card').forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        const rotateX = ((y - centerY) / centerY) * -4;
+        const rotateY = ((x - centerX) / centerX) * 4;
+        card.style.transform = `perspective(2000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = `perspective(2000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+      });
+    });
+
+    document.querySelectorAll('.hw-check').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        if (this.checked) {
+          const input = this.closest('.hw-item').querySelector('.hw-input');
+          if (input) input.focus();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
